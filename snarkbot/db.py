@@ -8,9 +8,11 @@ from uuid import uuid4
 conn = sqlite3.connect(dbfile)
 session = conn.cursor()
 if not os.path.exists(dbfile):
-	session.execute('''CREATE TABLE phrase (id text, added text, phrase text, added_by text)''')
-	session.execute('''CREATE TABLE responses(id text, phrase_id text, response text, added text, added_by text)''')
-	session.execute('''CREATE TABLE bucket(id text, thing text, added text, added_by text)''')
-	session.execute('''CREATE TABLE conversation(id text, with text, context blob)''')
-
+	session.execute("CREATE TABLE phrase (id text, added text, phrase text, added_by text)")
+	session.execute("CREATE TABLE responses(id text, phrase_id text, response text, added text, added_by text)")
+	session.execute("CREATE TABLE bucket(id text, thing text, added text, added_by text)")
+	session.execute("CREATE TABLE conversation(id text, with text, context blob)")
+	session.execute("CREATE TABLE nick(name text, privileged integer)")
+	
 	conn.commit()
+
