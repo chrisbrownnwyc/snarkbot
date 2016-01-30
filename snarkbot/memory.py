@@ -10,6 +10,12 @@ class ResponseNotFound(Exception):
 
 # just a wrapper around some common operations in sql
 class Memory(object):
+	def __init__(self,history=50):
+		self.history_max_lines = int(history)
+		# init history
+		session.execute('SELECT * FROM history LIMIT %d ORDER BY added DESC', self.history_max_lines)
+		self.history = session.fetchall().reverse() # reverse so we can append rather than insert
+
 	def get_phrase(self,phrase_id):
 		session.execute("SELECT * FROM phrase WHERE id=?",[phrase_id])
 		return self.zip_phrase(session.fetchone())
@@ -89,4 +95,8 @@ class Memory(object):
 			raise PhraseNotFound('That phrase does not exist')
 
 		return True
-	
+
+	def add_history(self, nick, history_line ):
+		
+
+

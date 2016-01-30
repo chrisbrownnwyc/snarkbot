@@ -6,8 +6,8 @@ import time
 
 import conversation
 import commands
-import bot_protocols
-import bot_memory
+import protocol as bot_protocols
+import memory
 
 from .config import max_wait_seconds,min_wait_seconds, debug, max_history_lines
 
@@ -20,7 +20,7 @@ class Bot(object):
 		except AttributeError:
 			raise ValueError("Protocol %s does not exist" % protocol)
 
-		self.mem = memory.BotMemory(history=max_history_lines) # initialize memory
+		self.mem = memory.Memory(history=max_history_lines) # initialize memory
 		self.cmd = commands.BotCtrl(botname=botname)
 
 	def listen(self):
