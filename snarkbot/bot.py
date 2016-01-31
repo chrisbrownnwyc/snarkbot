@@ -8,6 +8,7 @@ import conversation
 import commands
 import protocol as bot_protocols
 import memory
+from db import session, conn
 
 from .config import max_wait_seconds,min_wait_seconds, debug, max_history_lines
 
@@ -35,7 +36,7 @@ class Bot(object):
 				(to_nick,_input) = self.proto.read(timeout=randomizer) 
 
 				if _input:
-					self.mem.add_history(_input) # remember 
+					self.mem.add_history(to_nick, _input) # remember 
 					response = self.cmd.parse_command(to_nick,_input,memory=self.mem)
 					if response == 'shutdown':
 						self.shutdown()
@@ -66,3 +67,7 @@ class Bot(object):
 	def shutdown(self):
 		self.proto.send('Exiting. Good bye.','channel')
 		self.proto.close()
+
+		# close up anything in the db as well
+		conn.commit()
+		conn.close()
