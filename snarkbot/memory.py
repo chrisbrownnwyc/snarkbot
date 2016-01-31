@@ -12,6 +12,7 @@ class ResponseNotFound(Exception):
 class Memory(object):
 	def __init__(self,history=50):
 		self.history_max_lines = int(history)
+
 		# init history
 		session.execute('SELECT * FROM history LIMIT %d ORDER BY added DESC', self.history_max_lines)
 		self.history = session.fetchall().reverse() # reverse so we can append rather than insert
@@ -97,6 +98,53 @@ class Memory(object):
 		return True
 
 	def add_history(self, nick, history_line ):
+		if len(self.history) > self.history_max_lines:
+			del self.history[0]
+
+		self.history.append([nick,history_line, datetime.isoformat()])
 		
+	def commit_history(self):
+		# first delete any old stored history
+		# note that if the max lines config variable is shortened that some history will hang around
+		# I don't see this as a huge problem
+		session.execute('DELETE FROM history LIMIT %d' % len(self.history) )
 
+		# now insert everything we have stored so far
+		session.executemany( 'INSERT INTO history VALUES (?,?,?)', self.history)
+		conn.commit()
 
+	def recall_history(self,lines=1):
+		# get lines number of lines of previous history
+		start = len(self.history) - lines
+		if start < 0:
+			start = 0
+
+		hslice = self.history[start:len(self.history)]
+		return hslice
+
+	def find_history_by_nick(self,nick,lines=1):
+		# find the last lines said by [nick]
+
+		rhistory = self.history.reverse()
+		nicklines = []
+		for h in rhistory:
+			if h[0] == nick:
+				nicklines.append(h)
+
+			if len(nicklines) == lines:
+				break
+
+		return nicklines
+
+	def find_history_by_phrase(self,phrase,lines=1):
+		# find the last thing said that matches the phrase (uses "in")
+		rhistory = self.history.reverse()
+		phraselines = []
+		for h in rhistory:
+			if phrase in h[1]:
+				phraselines.append(h)
+
+			if len(phraselines) == lines:
+				break
+
+		return phraselines
