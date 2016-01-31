@@ -54,7 +54,7 @@ class Bot(object):
 				else:
 					now = int(time.time())
 					if (now - snark_timer) > randomizer:
-						response = conversation.Snark()
+						response = conversation.Snark(self.mem) # pass memory to snark so we can snark somethign based on the last input
 						to_nick = 'channel'
 						snark_timer = int(time.time())
 						randomizer = random.randint(min_wait_seconds, max_wait_seconds)
@@ -67,6 +67,8 @@ class Bot(object):
 	def shutdown(self):
 		self.proto.send('Exiting. Good bye.','channel')
 		self.proto.close()
+
+		self.mem.commit_history() # make sure we store all the history of this session
 
 		# close up anything in the db as well
 		conn.commit()

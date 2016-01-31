@@ -1,9 +1,44 @@
-import privileged
+import os
+from .dynloader import loader
+from .config import extra_command_paths
+
+# hack to get all the command plugins dynamically
+importpath = os.path.dirname(os.path.abspath(__file__))
+# import paths from configs as well
+paths = extra_command_paths
+paths.append(importpath)
+
+commands = {} 
+for p in paths:
+	commands.update(loader(p, 'SnarkbotCommand'))
+
+# rules are regular expressions that point to command tokens
+# rules should be a tuple, pattern, token
+# all input is stripped of the bot's name before checked against rules
+rules = []
+
+# command tokens are individual strings that point to the code to run
+command_tokens = {}
+
+# get rules from all of the loaded commands
+for k,v in commands.iteritems():
+	try:
+		rules.append( v.rules ) # rules should be a static dict for each command but they don't have to be there
+	except AttributeError:
+		pass
+
+# set local rules
+rules.append( '^shutdown','shutdown' )
+rules.append( '^promote ([^\s]+)$','promote')
+rules.append( '^demote ([^\s]+)$','demote')
+
+command_tokens['shutdown'] = BotCtrl.shutdown # I don't want to call this statically so this might not work.
+command_tokens['promote'] = BotCtrl.promote
+command_tokens['demote'] = BotCtrl.demote
 
 class BotCtrl(object):
 	def __init__(self,botname=botname):
 		self.botname = botname
-		self.priv = privileged.get_admins()
 
 	def parse_command(nick, msg,memory=None):
 		# see if we have a command
