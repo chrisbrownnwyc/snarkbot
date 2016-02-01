@@ -23,7 +23,12 @@ command_tokens = {}
 # get rules from all of the loaded commands
 for k,v in commands.iteritems():
 	try:
-		rules.append( v.rules ) # rules should be a static dict for each command but they don't have to be there
+		rules.extend( v.rules )
+	except AttributeError:
+		pass
+
+	try:
+		command_tokens.update(v.command_tokens)
 	except AttributeError:
 		pass
 
@@ -32,9 +37,10 @@ rules.append( '^shutdown','shutdown' )
 rules.append( '^promote ([^\s]+)$','promote')
 rules.append( '^demote ([^\s]+)$','demote')
 
-command_tokens['shutdown'] = BotCtrl.shutdown # I don't want to call this statically so this might not work.
-command_tokens['promote'] = BotCtrl.promote
-command_tokens['demote'] = BotCtrl.demote
+# uses tuples. Instance will be created then getattr called on the string to execute the method
+command_tokens['shutdown'] = (BotCtrl,'shutdown')
+command_tokens['promote'] = (BotCtrl,'promote')
+command_tokens['demote'] = (BotCtrl,'demote')
 
 class BotCtrl(object):
 	def __init__(self,botname=botname):
@@ -65,20 +71,17 @@ class BotCtrl(object):
 	
 	# admin commands
 	def shutdown(self,nick,*args):
-		if nick in self.priv:
+		if nick.is_privileged():
 			return 'shutdown'
 
 		return self.unauthorized(nick)
 
 	def promote(self,nick,*args):
-		if nick in self.priv:
+		if nick.is_privileged():
 			try:
 				pnick = args[0]
-				try:
-					privileged.add_admin(pnick)
-					return 'Added bot wrangler %s' % pnick
-				except privileged.AdminExists:
-					return '%s is already a bot wrangler.' % pnick
+				NickMemory().promote_nick(pnick)
+				return 'Added bot wrangler %s' % pnick
 
 			except IndexError:
 				return 'Sorry but I need a name to promote'
@@ -86,14 +89,11 @@ class BotCtrl(object):
 		return self.unauthorized(nick)
 
 	def demote(self,nick,*args):
-		if nick in self.priv:
+		if nick.is_privileged():
 			try:
 				pnick = args[0]
-				try:
-					privileged.delete_admin(pnick)
-					return 'Removed %s as a bot wrangler.' % pnick
-				except privileged.AdminNotFound:
-					return '%s is not a bot wrangler.' % pnick
+				NickMemory().demote_nick(pnick)
+				return 'Removed %s as a bot wrangler.' % pnick
 			except IndexError:
 				return 'Sorry but I need a name to demote.'
 		else:

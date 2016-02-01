@@ -36,7 +36,7 @@ class NickMemory(object):
 
 	def set_privilege(self,nick,priv):
 		nick = self.get_nick(name)
-		session.execute('UPDATE nick SET privileged=1 WHERE name=?',[name,priv])
+		session.execute('UPDATE nick SET privileged=? WHERE name=?',[priv,name])
 		conn.commit()
 		
 	def promote_nick(self,name):
