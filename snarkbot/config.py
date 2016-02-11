@@ -1,1 +1,1 @@
-dbfile = '/tmp/botplusplus.db'
+dbfile = '/tmp/snarkbot.db'
